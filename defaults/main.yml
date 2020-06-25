@@ -1,0 +1,16 @@
+---
+# What channel of the microk8s snap should we install?
+# See: https://snapcraft.io/microk8s for available channels
+microk8s_version: "1.18/stable"
+
+# Which Microk8s plugins should we install?
+# Note that any installed plugins not on this list will be removed.
+# See: https://microk8s.io/docs/addons#heading--list
+microk8s_plugins: []
+  # - rbac
+  # - dns
+  # - storage
+  # - registry
+  # - metrics-server
+  # - helm3
+  # - ingress

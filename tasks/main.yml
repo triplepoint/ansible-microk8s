@@ -1,0 +1,32 @@
+---
+- name: Ensure snapd is installed
+  package:
+    name: snapd
+    state: present
+
+- name: Ensure microk8s is installed
+  snap:
+    name: microk8s
+    classic: yes
+    channel: "{{ microk8s_version }}"
+
+- name: Wait for microk8s to be ready
+  command: "microk8s.status --wait-ready"
+  changed_when: false
+
+- name: Ensure the kubectl alias exists
+  command: "snap alias microk8s.kubectl kubectl"
+  changed_when: false
+
+- name: Define the current status of the microk8s plugins
+  command: "microk8s status --format yaml"
+  register: _microk8s_current_plugins
+  changed_when: false
+
+- name: Ensure no plugins are enabled that shouldn't be
+  command: "microk8s.disable {{ item }}"
+  with_items: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`enabled`].name') | difference(microk8s_plugins) }}"
+
+- name: Ensure microk8s plugins are enabled
+  command: "microk8s.enable {{ item }}"
+  with_items: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`disabled`].name') | intersect(microk8s_plugins) }}"

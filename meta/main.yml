@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  role_name: microk8s
+  author: Jonathan Hanson
+  description: The Microk8s single-node Kubernetes service.
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+  galaxy_tags:
+    - microk8s
+    - kubernetes
+dependencies: []
