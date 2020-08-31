@@ -1,4 +1,5 @@
 ---
+# Install
 - name: Ensure snapd is installed
   package:
     name: snapd
@@ -7,23 +8,34 @@
 - name: Ensure microk8s is installed
   snap:
     name: microk8s
-    classic: yes
     channel: "{{ microk8s_version }}"
+    classic: yes
 
 - name: Wait for microk8s to be ready
   command: "microk8s.status --wait-ready"
   changed_when: false
 
-- name: Ensure the kubectl alias exists
-  command: "snap alias microk8s.kubectl kubectl"
+  # Command Alias
+- name: Determine whether or not the kubectl alias is configured
+  command: "snap aliases"
+  register: _microk8s_snap_aliases
   changed_when: false
 
+- name: Ensure the kubectl alias exists
+  command: "snap alias microk8s.kubectl kubectl"
+  when: microk8s_alias_kubectl and not _microk8s_snap_aliases.stdout | regex_search('\nmicrok8s.kubectl\s+kubectl')
+
+- name: Remove kubectl alias
+  command: "snap unalias kubectl"
+  when: not microk8s_alias_kubectl and _microk8s_snap_aliases.stdout | regex_search('\nmicrok8s.kubectl\s+kubectl')
+
+# Plugins
 - name: Define the current status of the microk8s plugins
   command: "microk8s status --format yaml"
   register: _microk8s_current_plugins
   changed_when: false
 
-- name: Ensure no plugins are enabled that shouldn't be
+- name: Ensure no microk8s plugins are enabled that shouldn't be
   command: "microk8s.disable {{ item }}"
   with_items: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`enabled`].name') | difference(microk8s_plugins) }}"
 
