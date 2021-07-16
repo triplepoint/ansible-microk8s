@@ -6,7 +6,7 @@
     state: present
 
 - name: Ensure microk8s is installed
-  snap:
+  community.general.snap:
     name: microk8s
     channel: "{{ microk8s_version }}"
     classic: yes
@@ -35,10 +35,23 @@
   register: _microk8s_current_plugins
   changed_when: false
 
+- name: Define lists of the names of enabled and disabled microk8s plugins
+  set_fact:
+    _microk8s_enabled_plugins: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`enabled`].name') }}"
+    _microk8s_disabled_plugins: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`disabled`].name') }}"
+
 - name: Ensure no microk8s plugins are enabled that shouldn't be
   command: "microk8s.disable {{ item }}"
-  with_items: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`enabled`].name') | difference(microk8s_plugins) }}"
+  with_items: "{{ _microk8s_enabled_plugins | difference(microk8s_plugins | json_query('[].name')) }}"
 
-- name: Ensure microk8s plugins are enabled
-  command: "microk8s.enable {{ item }}"
-  with_items: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`disabled`].name') | intersect(microk8s_plugins) }}"
+- name: Ensure microk8s plugins are enabled that should be
+  command: "microk8s.enable {{ microk8s_plugins | json_query('[?name==`'+item+'`].name | [0]') }}:{{ microk8s_plugins | json_query('[?name==`'+item+'`].args | [0]') }}"
+  with_items: "{{ _microk8s_disabled_plugins | intersect(microk8s_plugins | json_query('[].name')) }}"
+
+# Remote access
+- name: Ensure the host domain is configured in microk8s
+  ansible.builtin.lineinfile:
+    path: /var/snap/microk8s/current/certs/csr.conf.template
+    regexp: "^DNS.6 = .*"
+    line: "DNS.6 = {{ ansible_fqdn }}"
+    insertafter: '^\[ alt_names \]'

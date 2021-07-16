@@ -1,7 +1,7 @@
 ---
 # What channel of the microk8s snap should we install?
 # See: https://snapcraft.io/microk8s for available channels
-microk8s_version: "1.18/stable"
+microk8s_version: "1.21/stable"
 
 # Should we alias `microk8s kubectl` to `kubectl`?  Disable this
 # If you already have a `kubectl` command installed.
@@ -10,11 +10,13 @@ microk8s_alias_kubectl: yes
 # Which Microk8s plugins should we install?
 # Note that any installed plugins not on this list will be removed.
 # See: https://microk8s.io/docs/addons#heading--list
-microk8s_plugins: []
-  # - rbac
-  # - dns
-  # - storage
-  # - registry
-  # - metrics-server
-  # - helm3
-  # - ingress
+# Each item in the list should have a `name` attribute for the plugin name, and can optionally have a
+# `args` string attribute for install-time arguments to pass the `microk8s.enable` command
+microk8s_plugins:
+  - name: ha-cluster
+  - name: dns
+  - name: storage
+  - name: dashboard
+  - name: metallb
+    args: "10.64.140.43-10.64.140.49"
+  - name: metrics-server
