@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   role_name: microk8s
+  namespace: triplepoint
   author: Jonathan Hanson
   description: The Microk8s single-node Kubernetes service.
   license: MIT
