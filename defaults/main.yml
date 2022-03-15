@@ -5,7 +5,7 @@ microk8s_version: "1.21/stable"
 
 # Should we alias `microk8s kubectl` to `kubectl`?  Disable this
 # If you already have a `kubectl` command installed.
-microk8s_alias_kubectl: yes
+microk8s_alias_kubectl: true
 
 # Which Microk8s plugins should we install?
 # Note that any installed plugins not on this list will be removed.
@@ -13,10 +13,23 @@ microk8s_alias_kubectl: yes
 # Each item in the list should have a `name` attribute for the plugin name, and can optionally have a
 # `args` string attribute for install-time arguments to pass the `microk8s.enable` command
 microk8s_plugins:
-  - name: ha-cluster
   - name: dns
   - name: storage
   - name: dashboard
-  - name: metallb
-    args: "10.64.140.43-10.64.140.49"
   - name: metrics-server
+  - name: ha-cluster
+  # - name: metallb
+  #   args: "10.64.140.43-10.64.140.49"
+  # - name: helm3
+  - name: traefik
+  - name: registry
+  # - name: rbac
+
+
+# microk8s_plugin_dashboard_enable: true
+# microk8s_plugin_dashboard_version: v2.0.1
+# microk8s_plugin_dashboard_namespace: kubernetes-dashboard
+# microk8s_plugin_dashboard_secret: kubernetes-dashboard-certs
+# microk8s_plugin_dashboard_manifest_dir: /tmp/dashboard
+# microk8s_plugin_dashboard_manifest_file_checksum: sha256:3f6a378594f47e6941176e1d0af8f3ba04786b745145977860d9097a230ef68f
+# microk8s_plugin_dashboard_custom_file: kubernetes-dashboard-custom.yml
