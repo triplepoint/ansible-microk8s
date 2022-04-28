@@ -1,7 +1,7 @@
 ---
 # What channel of the microk8s snap should we install?
 # See: https://snapcraft.io/microk8s for available channels
-microk8s_version: "1.21/stable"
+# microk8s_version: "latest/stable"  # For whatever reason, using this is broken in the snap plugin (2022.04.28)
 
 # Should we alias `microk8s kubectl` to `kubectl`?  Disable this
 # If you already have a `kubectl` command installed.

@@ -1,0 +1,28 @@
+---
+- name: Define the current status of the microk8s plugins
+  command: |
+    microk8s status --format yaml
+  register: _microk8s_current_plugins
+  changed_when: false
+
+- name: Define lists of the names of enabled and disabled microk8s plugins
+  set_fact:
+    _microk8s_enabled_plugins: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`enabled`].name') }}"
+    _microk8s_disabled_plugins: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`disabled`].name') }}"
+
+- name: Define lists of the names of microk8s plugins to be enabled and disabled
+  set_fact:
+    _microk8s_plugins_to_disable: "{{ _microk8s_enabled_plugins | difference(microk8s_plugins | json_query('[].name')) }}"
+    _microk8s_plugins_to_enable: "{{ _microk8s_disabled_plugins | intersect(microk8s_plugins | json_query('[].name')) }}"
+
+- name: Ensure no microk8s plugins are enabled that shouldn't be
+  command: |
+    microk8s.disable {{ item }} --force
+  with_items: "{{ _microk8s_plugins_to_disable }}"
+  when: _microk8s_plugins_to_disable
+
+- name: Ensure microk8s plugins are enabled that should be
+  command: |
+    microk8s.enable {{ microk8s_plugins | json_query('[?name==`'+item+'`].name | [0]') }}:{{ microk8s_plugins | json_query('[?name==`'+item+'`].args | [0]') }}
+  with_items: "{{ _microk8s_plugins_to_enable }}"
+  when: _microk8s_plugins_to_enable

@@ -1,0 +1,34 @@
+---
+# Install
+- name: Ensure snapd is installed
+  package:
+    name: snapd
+    state: present
+
+- name: Ensure microk8s is installed
+  community.general.snap:
+    name: microk8s
+    channel: "{{ microk8s_version| default(omit) }}"
+    classic: true
+
+- name: Wait for microk8s to be ready
+  command: |
+    microk8s.status --wait-ready
+  changed_when: false
+
+# Command Alias
+- name: Determine whether or not the kubectl alias is configured
+  command: |
+    snap aliases
+  register: _microk8s_snap_aliases
+  changed_when: false
+
+- name: Ensure the kubectl alias exists
+  command: |
+    snap alias microk8s.kubectl kubectl
+  when: microk8s_alias_kubectl and not _microk8s_snap_aliases.stdout | regex_search('\nmicrok8s.kubectl\s+kubectl')
+
+- name: Remove kubectl alias
+  command: |
+    snap unalias kubectl
+  when: not microk8s_alias_kubectl and _microk8s_snap_aliases.stdout | regex_search('\nmicrok8s.kubectl\s+kubectl')
