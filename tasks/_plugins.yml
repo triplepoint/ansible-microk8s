@@ -4,16 +4,20 @@
     microk8s status --format yaml
   register: _microk8s_current_plugins
   changed_when: false
+  check_mode: no
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Define lists of the names of enabled and disabled microk8s plugins
   set_fact:
     _microk8s_enabled_plugins: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`enabled`].name') }}"
     _microk8s_disabled_plugins: "{{ _microk8s_current_plugins.stdout | from_yaml | json_query('addons[?status==`disabled`].name') }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Define lists of the names of microk8s plugins to be enabled and disabled
   set_fact:
     _microk8s_plugins_to_disable: "{{ _microk8s_enabled_plugins | difference(microk8s_plugins | json_query('[].name')) }}"
     _microk8s_plugins_to_enable: "{{ _microk8s_disabled_plugins | intersect(microk8s_plugins | json_query('[].name')) }}"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Ensure no microk8s plugins are enabled that shouldn't be
   command: |
