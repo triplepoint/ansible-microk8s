@@ -1,34 +1,36 @@
 ---
 # Install
 - name: Ensure snapd is installed
-  package:
+  ansible.builtin.package:
     name: snapd
     state: present
 
 - name: Ensure microk8s is installed
   community.general.snap:
     name: microk8s
-    channel: "{{ microk8s_version| default(omit) }}"
+    channel: "{{ microk8s_version | default(omit) }}"
     classic: true
 
-- name: Wait for microk8s to be ready
-  command: |
-    microk8s.status --wait-ready
+- name: Wait for microk8s to be ready (up to 10 minutes)
+  ansible.builtin.command: |
+    microk8s.status --wait-ready --timeout 600
   changed_when: false
 
 # Command Alias
 - name: Determine whether or not the kubectl alias is configured
-  command: |
+  ansible.builtin.command: |
     snap aliases
   register: _microk8s_snap_aliases
   changed_when: false
+  check_mode: false
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Ensure the kubectl alias exists
-  command: |
+  ansible.builtin.command: |
     snap alias microk8s.kubectl kubectl
   when: microk8s_alias_kubectl and not _microk8s_snap_aliases.stdout | regex_search('\nmicrok8s.kubectl\s+kubectl')
 
 - name: Remove kubectl alias
-  command: |
+  ansible.builtin.command: |
     snap unalias kubectl
   when: not microk8s_alias_kubectl and _microk8s_snap_aliases.stdout | regex_search('\nmicrok8s.kubectl\s+kubectl')
